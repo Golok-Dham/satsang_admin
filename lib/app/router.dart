@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../features/auth/presentation/login_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/quotes/presentation/quotes_list_screen.dart';
 import '../core/providers/auth_provider.dart';
 
 part 'router.g.dart';
@@ -32,6 +33,7 @@ GoRouter router(Ref ref) {
     routes: [
       GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/', name: 'dashboard', builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: '/quotes', name: 'quotes', builder: (context, state) => const QuotesListScreen()),
       // TODO: Add more routes for content, users, etc.
     ],
   );

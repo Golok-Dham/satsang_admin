@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/auth_provider.dart';
 
@@ -44,7 +45,17 @@ class DashboardScreen extends ConsumerWidget {
       drawer: NavigationDrawer(
         selectedIndex: 0,
         onDestinationSelected: (index) {
-          // TODO: Handle navigation
+          // Navigate based on selection
+          Navigator.of(context).pop(); // Close drawer
+          switch (index) {
+            case 0:
+              context.go('/');
+              break;
+            case 6:
+              context.go('/quotes');
+              break;
+            // TODO: Add navigation for other menu items
+          }
         },
         children: const [
           DrawerHeader(

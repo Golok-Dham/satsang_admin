@@ -1,0 +1,89 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Admin: Web (Dev, Local API - Chrome) [DEBUG]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--debug", // Debug mode for better hot reload and logging
+        "--web-port=5174", // Different port from main app (5173)
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=API_BASE_URL=http://localhost:8080",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    },
+    {
+      "name": "Admin: Web (Dev, Local API - Chrome) [PROFILE]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--profile", // Profile mode for performance testing
+        "--web-port=5174", // Different port from main app (5173)
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=API_BASE_URL=http://localhost:8080",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    },
+    {
+      "name": "Admin: Web (UAT API - Chrome) [DEBUG]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--debug",
+        "--web-port=5174",
+        "--dart-define=APP_ENV=uat",
+        "--dart-define=API_BASE_URL=https://api-uat.satsang.golokdham.in",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    },
+    {
+      "name": "Admin: Web (Prod API - Chrome) [DEBUG]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--debug",
+        "--web-port=5174",
+        "--dart-define=APP_ENV=prod",
+        "--dart-define=API_BASE_URL=https://api.satsang.golokdham.in",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    },
+    {
+      "name": "Admin: Web (Prod API - Chrome) [PROFILE]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--profile", // Profile mode for production performance testing
+        "--web-port=5174",
+        "--dart-define=APP_ENV=prod",
+        "--dart-define=API_BASE_URL=https://api.satsang.golokdham.in",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    },
+    {
+      "name": "Admin: Web (Edge) [DEBUG]",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "edge",
+      "toolArgs": [
+        "--debug",
+        "--web-port=5174",
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=API_BASE_URL=http://localhost:8080",
+        "--dart-define=APP_BASE_URL=http://localhost:5174"
+      ]
+    }
+  ]
+}

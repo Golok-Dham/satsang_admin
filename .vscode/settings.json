@@ -1,0 +1,28 @@
+{
+    "dart.flutterSdkPath": null,
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "files.exclude": {
+        "**/build": true,
+        "**/.dart_tool": true
+    },
+    "search.exclude": {
+        "**/build": true,
+        "**/.dart_tool": true,
+        "**/node_modules": true
+    },
+    "dart.lineLength": 120,
+    "editor.rulers": [120],
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": "off"
+    }
+}

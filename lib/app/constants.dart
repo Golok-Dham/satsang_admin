@@ -1,19 +1,13 @@
 /// Application-wide constants and configuration
 class AppConstants {
   // API Configuration
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
-  );
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
 
   static const String apiBaseUrlProd = 'https://api.satsang.golokdham.in';
   static const String apiBaseUrlUat = 'https://test-api.satsang.golokdham.in';
 
   // Environment
-  static const String environment = String.fromEnvironment(
-    'ENVIRONMENT',
-    defaultValue: 'development',
-  );
+  static const String environment = String.fromEnvironment('ENVIRONMENT', defaultValue: 'development');
 
   static bool get isProduction => environment == 'production';
   static bool get isUat => environment == 'uat';

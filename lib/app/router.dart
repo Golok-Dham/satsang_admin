@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -9,7 +8,7 @@ import '../core/providers/auth_provider.dart';
 part 'router.g.dart';
 
 @riverpod
-GoRouter router(RouterRef ref) {
+GoRouter router(Ref ref) {
   final authState = ref.watch(authStateProvider);
 
   return GoRouter(
@@ -31,16 +30,8 @@ GoRouter router(RouterRef ref) {
       return null; // No redirect needed
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        name: 'login',
-        builder: (context, state) => const LoginScreen(),
-      ),
-      GoRoute(
-        path: '/',
-        name: 'dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
+      GoRoute(path: '/login', name: 'login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/', name: 'dashboard', builder: (context, state) => const DashboardScreen()),
       // TODO: Add more routes for content, users, etc.
     ],
   );

@@ -1,14 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import 'package:satsang_ott/app/config/environment.dart';
+import '../../app/constants.dart';
 
 /// API Service for backend communication
 class ApiService {
   
   ApiService() {
     dio = Dio(BaseOptions(
-      baseUrl: Environment.apiBaseUrl,
+      baseUrl: AppConstants.apiBaseUrl,
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -19,9 +19,9 @@ class ApiService {
     
     _setupInterceptors();
   }
-  // Prefer Environment.apiBaseUrl as the single source of truth.
+  // Prefer AppConstants.apiBaseUrl as the single source of truth.
   // This remains for backward compatibility; avoid using directly.
-  static const String baseUrl = Environment.apiBaseUrl;
+  static String get baseUrl => AppConstants.apiBaseUrl;
 
   late final Dio dio;
   

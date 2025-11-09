@@ -11,7 +11,9 @@
         "**/node_modules": true
     },
     "dart.lineLength": 120,
-    "editor.rulers": [120],
+    "editor.rulers": [
+        120
+    ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit"

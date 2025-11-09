@@ -15,21 +15,14 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Satsang Admin Dashboard'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
           const SizedBox(width: 8),
           PopupMenuButton(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    child: Text(
-                      (user?.email ?? 'A')[0].toUpperCase(),
-                    ),
-                  ),
+                  CircleAvatar(child: Text((user?.email ?? 'A')[0].toUpperCase())),
                   const SizedBox(width: 8),
                   Text(user?.email ?? 'Admin'),
                   const SizedBox(width: 4),
@@ -39,10 +32,7 @@ class DashboardScreen extends ConsumerWidget {
             ),
             itemBuilder: (context) => [
               PopupMenuItem(
-                child: const ListTile(
-                  leading: Icon(Icons.logout),
-                  title: Text('Sign Out'),
-                ),
+                child: const ListTile(leading: Icon(Icons.logout), title: Text('Sign Out')),
                 onTap: () async {
                   await ref.read(authServiceProvider.notifier).signOut();
                 },
@@ -67,38 +57,14 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
           ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.dashboard),
-            label: Text('Dashboard'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.video_library),
-            label: Text('Content'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.category),
-            label: Text('Categories'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.people),
-            label: Text('Users'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.playlist_play),
-            label: Text('Playlists'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.self_improvement),
-            label: Text('Sankalpas'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.format_quote),
-            label: Text('Quotes'),
-          ),
-          NavigationDrawerDestination(
-            icon: Icon(Icons.analytics),
-            label: Text('Analytics'),
-          ),
+          NavigationDrawerDestination(icon: Icon(Icons.dashboard), label: Text('Dashboard')),
+          NavigationDrawerDestination(icon: Icon(Icons.video_library), label: Text('Content')),
+          NavigationDrawerDestination(icon: Icon(Icons.category), label: Text('Categories')),
+          NavigationDrawerDestination(icon: Icon(Icons.people), label: Text('Users')),
+          NavigationDrawerDestination(icon: Icon(Icons.playlist_play), label: Text('Playlists')),
+          NavigationDrawerDestination(icon: Icon(Icons.self_improvement), label: Text('Sankalpas')),
+          NavigationDrawerDestination(icon: Icon(Icons.format_quote), label: Text('Quotes')),
+          NavigationDrawerDestination(icon: Icon(Icons.analytics), label: Text('Analytics')),
         ],
       ),
       body: Padding(
@@ -106,16 +72,11 @@ class DashboardScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Welcome back!',
-              style: theme.textTheme.headlineMedium,
-            ),
+            Text('Welcome back!', style: theme.textTheme.headlineMedium),
             const SizedBox(height: 8),
             Text(
               'Here\'s what\'s happening with your platform today.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 32),
             Expanded(
@@ -124,30 +85,10 @@ class DashboardScreen extends ConsumerWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  _StatsCard(
-                    title: 'Total Users',
-                    value: '---',
-                    icon: Icons.people,
-                    color: Colors.blue,
-                  ),
-                  _StatsCard(
-                    title: 'Total Content',
-                    value: '---',
-                    icon: Icons.video_library,
-                    color: Colors.green,
-                  ),
-                  _StatsCard(
-                    title: 'Total Views',
-                    value: '---',
-                    icon: Icons.visibility,
-                    color: Colors.orange,
-                  ),
-                  _StatsCard(
-                    title: 'Active Sessions',
-                    value: '---',
-                    icon: Icons.play_circle,
-                    color: Colors.purple,
-                  ),
+                  _StatsCard(title: 'Total Users', value: '---', icon: Icons.people, color: Colors.blue),
+                  _StatsCard(title: 'Total Content', value: '---', icon: Icons.video_library, color: Colors.green),
+                  _StatsCard(title: 'Total Views', value: '---', icon: Icons.visibility, color: Colors.orange),
+                  _StatsCard(title: 'Active Sessions', value: '---', icon: Icons.play_circle, color: Colors.purple),
                 ],
               ),
             ),
@@ -159,12 +100,7 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class _StatsCard extends StatelessWidget {
-  const _StatsCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
+  const _StatsCard({required this.title, required this.value, required this.icon, required this.color});
 
   final String title;
   final String value;
@@ -183,16 +119,11 @@ class _StatsCard extends StatelessWidget {
           children: [
             Icon(icon, size: 48, color: color),
             const SizedBox(height: 16),
-            Text(
-              value,
-              style: theme.textTheme.headlineMedium,
-            ),
+            Text(value, style: theme.textTheme.headlineMedium),
             const SizedBox(height: 4),
             Text(
               title,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
           ],

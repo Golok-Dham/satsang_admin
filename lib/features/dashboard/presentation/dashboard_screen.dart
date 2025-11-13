@@ -3,12 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/providers/auth_provider.dart';
+import '../../quotes/presentation/quotes_list_screen.dart';
+import '../../content/presentation/content_list_screen.dart';
+import '../../users/presentation/users_list_screen.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  int _selectedIndex = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final theme = Theme.of(context);
 
@@ -43,18 +53,32 @@ class DashboardScreen extends ConsumerWidget {
         ],
       ),
       drawer: NavigationDrawer(
-        selectedIndex: 0,
+        selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
-          // Navigate based on selection
+          setState(() {
+            _selectedIndex = index;
+          });
           Navigator.of(context).pop(); // Close drawer
+          // Navigate using GoRouter for deep linking
           switch (index) {
             case 0:
               context.go('/');
               break;
+            case 1:
+              context.go('/content');
+              break;
+            case 2:
+              context.go('/categories');
+              break;
+            case 3:
+              context.go('/users');
+              break;
+            case 4:
+              context.go('/playlists');
+              break;
             case 6:
               context.go('/quotes');
               break;
-            // TODO: Add navigation for other menu items
           }
         },
         children: const [
@@ -78,33 +102,63 @@ class DashboardScreen extends ConsumerWidget {
           NavigationDrawerDestination(icon: Icon(Icons.analytics), label: Text('Analytics')),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Welcome back!', style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Here\'s what\'s happening with your platform today.',
-              style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+      body: _buildContent(theme),
+    );
+  }
+
+  Widget _buildContent(ThemeData theme) {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboard(theme);
+      case 1:
+        return const ContentListScreen(embedded: true);
+      case 3:
+        return const UsersListScreen(embedded: true);
+      case 6:
+        return const QuotesListScreen(embedded: true);
+      default:
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.construction, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              Text('Coming Soon', style: theme.textTheme.headlineMedium),
+              const SizedBox(height: 8),
+              Text('This feature is under development', style: theme.textTheme.bodyMedium),
+            ],
+          ),
+        );
+    }
+  }
+
+  Widget _buildDashboard(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Welcome back!', style: theme.textTheme.headlineMedium),
+          const SizedBox(height: 8),
+          Text(
+            'Here\'s what\'s happening with your platform today.',
+            style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: 32),
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 4,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                _StatsCard(title: 'Total Users', value: '---', icon: Icons.people, color: Colors.blue),
+                _StatsCard(title: 'Total Content', value: '---', icon: Icons.video_library, color: Colors.green),
+                _StatsCard(title: 'Total Views', value: '---', icon: Icons.visibility, color: Colors.orange),
+                _StatsCard(title: 'Active Sessions', value: '---', icon: Icons.play_circle, color: Colors.purple),
+              ],
             ),
-            const SizedBox(height: 32),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 4,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _StatsCard(title: 'Total Users', value: '---', icon: Icons.people, color: Colors.blue),
-                  _StatsCard(title: 'Total Content', value: '---', icon: Icons.video_library, color: Colors.green),
-                  _StatsCard(title: 'Total Views', value: '---', icon: Icons.visibility, color: Colors.orange),
-                  _StatsCard(title: 'Active Sessions', value: '---', icon: Icons.play_circle, color: Colors.purple),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

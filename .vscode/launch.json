@@ -7,6 +7,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--debug", // Debug mode for better hot reload and logging
         "--web-port=5174", // Different port from main app (5173)
@@ -21,6 +25,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--profile", // Profile mode for performance testing
         "--web-port=5174", // Different port from main app (5173)
@@ -35,6 +43,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--debug",
         "--web-port=5174",
@@ -49,6 +61,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--debug",
         "--web-port=5174",
@@ -63,6 +79,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "chrome",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--profile", // Profile mode for production performance testing
         "--web-port=5174",
@@ -77,6 +97,10 @@
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "edge",
+      "args": [
+        "--web-browser-flag=--disable-features=IsolateOrigins",
+        "--web-browser-flag=--disable-site-isolation-trials"
+      ],
       "toolArgs": [
         "--debug",
         "--web-port=5174",

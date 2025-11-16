@@ -1,27 +1,44 @@
+// ignore_for_file: constant_identifier_names
+
 import '../utils/json_utils.dart';
+
+/// Paged API Response for Spring Boot Page responses
+class PagedResponse<T> {
+  PagedResponse({
+    required this.content,
+    required this.totalElements,
+    required this.totalPages,
+    required this.size,
+    required this.number,
+  });
+
+  factory PagedResponse.fromJson(Map<String, dynamic> json, T Function(Object?) fromJsonT) {
+    final contentList = json['content'] as List<dynamic>? ?? [];
+    return PagedResponse<T>(
+      content: contentList.map((e) => fromJsonT(e)).toList().cast<T>(),
+      totalElements: json.getInt('totalElements') ?? 0,
+      totalPages: json.getInt('totalPages') ?? 0,
+      size: json.getInt('size') ?? 0,
+      number: json.getInt('number') ?? 0,
+    );
+  }
+
+  final List<T> content;
+  final int totalElements;
+  final int totalPages;
+  final int size;
+  final int number;
+}
 
 /// API Response wrapper matching backend format
 class ApiResponse<T> {
-  ApiResponse({
-    required this.success,
-    this.data,
-    this.error,
-    this.message,
-    required this.timestamp,
-  });
+  ApiResponse({required this.success, this.data, this.error, this.message, required this.timestamp});
 
-  factory ApiResponse.fromJson(
-    Map<String, dynamic> json,
-    T Function(Object?)? fromJsonT,
-  ) {
+  factory ApiResponse.fromJson(Map<String, dynamic> json, T Function(Object?)? fromJsonT) {
     return ApiResponse<T>(
       success: json.getBool('success'),
-      data: json['data'] != null && fromJsonT != null
-          ? fromJsonT(json['data'])
-          : json['data'] as T?,
-      error: json['error'] != null
-          ? ApiError.fromJson(json.getMap('error')!)
-          : null,
+      data: json['data'] != null && fromJsonT != null ? fromJsonT(json['data']) : json['data'] as T?,
+      error: json['error'] != null ? ApiError.fromJson(json.getMap('error')!) : null,
       message: json.getString('message'),
       timestamp: json.getString('timestamp') ?? '',
     );
@@ -33,13 +50,7 @@ class ApiResponse<T> {
   final String timestamp;
 
   Map<String, dynamic> toJson() {
-    return {
-      'success': success,
-      'data': data,
-      'error': error?.toJson(),
-      'message': message,
-      'timestamp': timestamp,
-    };
+    return {'success': success, 'data': data, 'error': error?.toJson(), 'message': message, 'timestamp': timestamp};
   }
 }
 
@@ -316,11 +327,7 @@ class ProgressData {
   final DateTime lastWatchedAt;
 
   Map<String, dynamic> toJson() {
-    return {
-      'contentId': contentId,
-      'currentPositionSeconds': currentPositionSeconds,
-      'isCompleted': isCompleted,
-    };
+    return {'contentId': contentId, 'currentPositionSeconds': currentPositionSeconds, 'isCompleted': isCompleted};
   }
 }
 
@@ -332,10 +339,14 @@ class DivineQuote {
     this.textTransliteration,
     this.textHindiMeaning,
     required this.textEnglishMeaning,
-    required this.sourceBook,
+    this.sourceBook,
+    this.sourceBookHindi,
+    this.chapterReference,
     this.verseNumber,
+    this.pageNumber,
     required this.category,
-    this.displayPriority,
+    required this.mood,
+    this.displayPriority = 0,
     this.favoriteCount = 0,
     this.shareCount = 0,
     required this.isActive,
@@ -351,10 +362,20 @@ class DivineQuote {
       textTransliteration: json.getString('textTransliteration'),
       textHindiMeaning: json.getString('textHindiMeaning'),
       textEnglishMeaning: json.getString('textEnglishMeaning')!,
-      sourceBook: json.getString('sourceBook')!,
+      sourceBook: json.getString('sourceBook'),
+      sourceBookHindi: json.getString('sourceBookHindi'),
+      chapterReference: json.getString('chapterReference'),
       verseNumber: json.getString('verseNumber'),
-      category: json.getString('category')!,
-      displayPriority: json.getInt('displayPriority'),
+      pageNumber: json.getString('pageNumber'),
+      category: QuoteCategory.values.firstWhere(
+        (e) => e.toString().split('.').last == json.getString('category'),
+        orElse: () => QuoteCategory.GENERAL,
+      ),
+      mood: QuoteMood.values.firstWhere(
+        (e) => e.toString().split('.').last == json.getString('mood'),
+        orElse: () => QuoteMood.NEUTRAL,
+      ),
+      displayPriority: json.getInt('displayPriority') ?? 0,
       favoriteCount: json.getInt('favoriteCount') ?? 0,
       shareCount: json.getInt('shareCount') ?? 0,
       isActive: json.getBool('isActive', defaultValue: true),
@@ -368,10 +389,14 @@ class DivineQuote {
   final String? textTransliteration; // Roman script representation
   final String? textHindiMeaning; // Hindi explanation/meaning (bhavarth)
   final String textEnglishMeaning; // English explanation/meaning
-  final String sourceBook;
+  final String? sourceBook;
+  final String? sourceBookHindi;
+  final String? chapterReference;
   final String? verseNumber;
-  final String category; // 'bhakti', 'vairagya', 'gyaan', 'prema', 'sadhana'
-  final int? displayPriority;
+  final String? pageNumber;
+  final QuoteCategory category;
+  final QuoteMood mood;
+  final int displayPriority;
   final int favoriteCount;
   final int shareCount;
   final bool isActive;
@@ -387,8 +412,12 @@ class DivineQuote {
       'textHindiMeaning': textHindiMeaning,
       'textEnglishMeaning': textEnglishMeaning,
       'sourceBook': sourceBook,
+      'sourceBookHindi': sourceBookHindi,
+      'chapterReference': chapterReference,
       'verseNumber': verseNumber,
-      'category': category,
+      'pageNumber': pageNumber,
+      'category': category.toString().split('.').last,
+      'mood': mood.toString().split('.').last,
       'displayPriority': displayPriority,
       'favoriteCount': favoriteCount,
       'shareCount': shareCount,
@@ -399,6 +428,12 @@ class DivineQuote {
     };
   }
 }
+
+/// Quote Category Enum
+enum QuoteCategory { BHAKTI, GYAAN, VAIRAGYA, KARMA, GENERAL }
+
+/// Quote Mood Enum
+enum QuoteMood { NEUTRAL, INSPIRATIONAL, CONTEMPLATIVE, DEVOTIONAL }
 
 /// Quote User Preference Model
 class QuoteUserPreference {

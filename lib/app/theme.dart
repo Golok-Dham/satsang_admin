@@ -2,15 +2,24 @@ import 'package:flutter/material.dart';
 
 /// Material Design 3 theme configuration for Satsang Admin
 class AppTheme {
-  // Brand colors - matching main Satsang app
-  static const Color primaryColor = Color(0xFFFF6B35); // Saffron/Orange
-  static const Color secondaryColor = Color(0xFF2D1810); // Dark brown
-  static const Color tertiaryColor = Color(0xFFFFA500); // Gold
+  // Radha Krishna inspired colors - divine blue and golden yellow
+  static const Color primaryColor = Color(0xFF4A90E2); // Krishna's divine blue
+  static const Color secondaryColor = Color(0xFFFDB813); // Radha's golden yellow
+  static const Color tertiaryColor = Color(0xFF7B68EE); // Soft purple (lotus/spiritual)
 
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(seedColor: primaryColor, brightness: Brightness.light),
+      colorScheme:
+          ColorScheme.fromSeed(
+            seedColor: primaryColor,
+            brightness: Brightness.light,
+            secondary: secondaryColor,
+            tertiary: tertiaryColor,
+          ).copyWith(
+            surface: const Color(0xFFFFFDF7), // Soft warm white
+            surfaceContainerHighest: const Color(0xFFF5F3ED), // Subtle cream
+          ),
       appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
       cardTheme: CardThemeData(
         elevation: 0,

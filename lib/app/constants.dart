@@ -1,7 +1,14 @@
+import 'package:flutter/foundation.dart';
+
 /// Application-wide constants and configuration
 class AppConstants {
   // API Configuration
-  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://localhost:8080');
+  /// Backend base URL injected at build time.
+  /// Defaults to localhost in debug and production API in release/profile.
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: kDebugMode ? 'http://localhost:8080' : 'https://api.satsang.golokdham.in',
+  );
 
   static const String apiBaseUrlProd = 'https://api.satsang.golokdham.in';
   static const String apiBaseUrlUat = 'https://test-api.satsang.golokdham.in';

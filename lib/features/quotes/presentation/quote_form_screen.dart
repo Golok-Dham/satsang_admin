@@ -75,9 +75,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
     final isEditing = widget.quote != null;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEditing ? 'Edit Quote' : 'Create Quote'),
-      ),
+      appBar: AppBar(title: Text(isEditing ? 'Edit Quote' : 'Create Quote')),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -118,10 +116,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
               // Hindi meaning
               TextFormField(
                 controller: _hindiMeaningController,
-                decoration: const InputDecoration(
-                  labelText: 'Hindi Meaning',
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: 'Hindi Meaning', border: OutlineInputBorder()),
                 maxLines: 4,
               ),
               const SizedBox(height: 16),
@@ -172,30 +167,21 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                   Expanded(
                     child: TextFormField(
                       controller: _chapterRefController,
-                      decoration: const InputDecoration(
-                        labelText: 'Chapter',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Chapter', border: OutlineInputBorder()),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
                       controller: _verseNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'Verse',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Verse', border: OutlineInputBorder()),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: TextFormField(
                       controller: _pageNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'Page',
-                        border: OutlineInputBorder(),
-                      ),
+                      decoration: const InputDecoration(labelText: 'Page', border: OutlineInputBorder()),
                     ),
                   ),
                 ],
@@ -207,16 +193,10 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                 children: [
                   Expanded(
                     child: DropdownButtonFormField<QuoteCategory>(
-                      value: _selectedCategory,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: OutlineInputBorder(),
-                      ),
+                      initialValue: _selectedCategory,
+                      decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
                       items: QuoteCategory.values.map((category) {
-                        return DropdownMenuItem(
-                          value: category,
-                          child: Text(category.toString().split('.').last),
-                        );
+                        return DropdownMenuItem(value: category, child: Text(category.toString().split('.').last));
                       }).toList(),
                       onChanged: (value) {
                         if (value != null) {
@@ -228,16 +208,10 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<QuoteMood>(
-                      value: _selectedMood,
-                      decoration: const InputDecoration(
-                        labelText: 'Mood',
-                        border: OutlineInputBorder(),
-                      ),
+                      initialValue: _selectedMood,
+                      decoration: const InputDecoration(labelText: 'Mood', border: OutlineInputBorder()),
                       items: QuoteMood.values.map((mood) {
-                        return DropdownMenuItem(
-                          value: mood,
-                          child: Text(mood.toString().split('.').last),
-                        );
+                        return DropdownMenuItem(value: mood, child: Text(mood.toString().split('.').last));
                       }).toList(),
                       onChanged: (value) {
                         if (value != null) {
@@ -257,10 +231,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Display Priority: $_displayPriority',
-                        style: theme.textTheme.titleMedium,
-                      ),
+                      Text('Display Priority: $_displayPriority', style: theme.textTheme.titleMedium),
                       const SizedBox(height: 8),
                       Slider(
                         value: _displayPriority.toDouble(),
@@ -299,11 +270,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitForm,
                 child: _isSubmitting
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(isEditing ? 'Update Quote' : 'Create Quote'),
               ),
             ],
@@ -322,28 +289,14 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
       final quote = DivineQuote(
         id: widget.quote?.id ?? 0,
         textDevanagari: _devanagariController.text,
-        textTransliteration: _transliterationController.text.isEmpty
-            ? null
-            : _transliterationController.text,
-        textHindiMeaning: _hindiMeaningController.text.isEmpty
-            ? null
-            : _hindiMeaningController.text,
+        textTransliteration: _transliterationController.text.isEmpty ? null : _transliterationController.text,
+        textHindiMeaning: _hindiMeaningController.text.isEmpty ? null : _hindiMeaningController.text,
         textEnglishMeaning: _englishMeaningController.text,
-        sourceBook: _sourceBookController.text.isEmpty
-            ? null
-            : _sourceBookController.text,
-        sourceBookHindi: _sourceBookHindiController.text.isEmpty
-            ? null
-            : _sourceBookHindiController.text,
-        chapterReference: _chapterRefController.text.isEmpty
-            ? null
-            : _chapterRefController.text,
-        verseNumber: _verseNumberController.text.isEmpty
-            ? null
-            : _verseNumberController.text,
-        pageNumber: _pageNumberController.text.isEmpty
-            ? null
-            : _pageNumberController.text,
+        sourceBook: _sourceBookController.text.isEmpty ? null : _sourceBookController.text,
+        sourceBookHindi: _sourceBookHindiController.text.isEmpty ? null : _sourceBookHindiController.text,
+        chapterReference: _chapterRefController.text.isEmpty ? null : _chapterRefController.text,
+        verseNumber: _verseNumberController.text.isEmpty ? null : _verseNumberController.text,
+        pageNumber: _pageNumberController.text.isEmpty ? null : _pageNumberController.text,
         category: _selectedCategory,
         mood: _selectedMood,
         isActive: _isActive,
@@ -359,10 +312,7 @@ class _QuoteFormScreenState extends ConsumerState<QuoteFormScreen> {
         SnackBarHelper.showSuccess(context, 'Quote created successfully');
       } else {
         // Update existing quote
-        await ref.read(quoteActionsProvider.notifier).updateQuote(
-              widget.quote!.id,
-              quote,
-            );
+        await ref.read(quoteActionsProvider.notifier).updateQuote(widget.quote!.id, quote);
         if (!mounted) return;
         SnackBarHelper.showSuccess(context, 'Quote updated successfully');
       }

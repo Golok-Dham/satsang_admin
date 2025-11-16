@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../app/constants.dart';
+
+part 'api_service.g.dart';
 
 /// API Service for backend communication
 class ApiService {
@@ -122,5 +125,8 @@ class ApiService {
   }
 }
 
-/// Global API service instance
-final apiService = ApiService();
+/// Riverpod provider for API service
+@riverpod
+ApiService apiService(Ref ref) {
+  return ApiService();
+}

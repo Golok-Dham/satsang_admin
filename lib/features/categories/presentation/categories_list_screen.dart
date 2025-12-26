@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:satsang_admin/core/utils/admin_grid_config.dart';
+import 'package:satsang_admin/core/utils/role_guard.dart';
 import 'package:satsang_admin/core/utils/snackbar_helper.dart';
 import 'package:satsang_admin/features/categories/models/category_metadata_model.dart';
 import 'package:satsang_admin/features/categories/models/category_model.dart';
@@ -127,12 +129,16 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
           constraints: const BoxConstraints(),
         ),
         const SizedBox(width: 8),
-        IconButton(
-          icon: const Icon(Icons.delete, size: 20),
-          onPressed: () => _deleteCategory(categoryId),
-          tooltip: 'Delete',
-          padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(),
+        // Delete button - ADMIN only
+        RoleGuard(
+          requiredPermission: Permission.delete,
+          child: IconButton(
+            icon: const Icon(Icons.delete, size: 20),
+            onPressed: () => _deleteCategory(categoryId),
+            tooltip: 'Delete',
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
         ),
       ],
     );
@@ -619,6 +625,7 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen> {
               key: ValueKey('categories_grid_${_rows.length}_${_searchQuery.hashCode}'),
               columns: _buildColumns(),
               rows: _rows,
+              configuration: AdminGridConfig.getConfiguration(context),
             ),
           ),
 

@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../core/models/api_models.dart';
 import '../../../core/services/api_service.dart';
+import '../models/playlist_item_model.dart';
 
 part 'playlists_provider.g.dart';
 
@@ -266,6 +267,131 @@ class PlaylistActions extends _$PlaylistActions {
 
       state = const AsyncValue.data(null);
       return apiResponse.data!;
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+}
+
+// ========== Playlist Items Providers ==========
+
+/// Provider for fetching playlist items
+@riverpod
+Future<List<PlaylistItemModel>> playlistItems(Ref ref, int playlistId) async {
+  final dio = ref.read(apiServiceProvider).dio;
+
+  try {
+    final response = await dio.get<Map<String, dynamic>>(
+      '/api/admin/playlists/$playlistId/items',
+    );
+
+    final apiResponse = ApiResponse.fromJson(
+      response.data!,
+      (data) {
+        if (data is! List) return <PlaylistItemModel>[];
+        return data.map((json) => PlaylistItemModel.fromJson(json as Map<String, dynamic>)).toList();
+      },
+    );
+
+    return apiResponse.data ?? [];
+  } catch (e) {
+    throw Exception('Failed to load playlist items: $e');
+  }
+}
+
+/// Provider for playlist items actions
+@riverpod
+class PlaylistItemsActions extends _$PlaylistItemsActions {
+  @override
+  FutureOr<void> build() {}
+
+  /// Add content to a playlist
+  Future<void> addItem({required int playlistId, required int contentId}) async {
+    state = const AsyncValue.loading();
+
+    final dio = ref.read(apiServiceProvider).dio;
+
+    try {
+      await dio.post<Map<String, dynamic>>(
+        '/api/admin/playlists/$playlistId/items',
+        data: {'contentId': contentId},
+      );
+
+      // Invalidate playlist items
+      ref.invalidate(playlistItemsProvider(playlistId));
+      ref.invalidate(playlistsListProvider);
+
+      state = const AsyncValue.data(null);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  /// Remove item from a playlist
+  Future<void> removeItem({required int playlistId, required int itemId}) async {
+    state = const AsyncValue.loading();
+
+    final dio = ref.read(apiServiceProvider).dio;
+
+    try {
+      await dio.delete('/api/admin/playlists/$playlistId/items/$itemId');
+
+      // Invalidate playlist items
+      ref.invalidate(playlistItemsProvider(playlistId));
+      ref.invalidate(playlistsListProvider);
+
+      state = const AsyncValue.data(null);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  /// Reorder item within a playlist
+  Future<void> reorderItem({
+    required int playlistId,
+    required int itemId,
+    required int newPosition,
+  }) async {
+    state = const AsyncValue.loading();
+
+    final dio = ref.read(apiServiceProvider).dio;
+
+    try {
+      await dio.put<Map<String, dynamic>>(
+        '/api/admin/playlists/$playlistId/items/$itemId/reorder',
+        data: {'newPosition': newPosition},
+      );
+
+      // Invalidate playlist items
+      ref.invalidate(playlistItemsProvider(playlistId));
+
+      state = const AsyncValue.data(null);
+    } catch (e) {
+      state = AsyncValue.error(e, StackTrace.current);
+      rethrow;
+    }
+  }
+
+  /// Bulk add items to a playlist
+  Future<void> addItems({required int playlistId, required List<int> contentIds}) async {
+    state = const AsyncValue.loading();
+
+    final dio = ref.read(apiServiceProvider).dio;
+
+    try {
+      await dio.post<Map<String, dynamic>>(
+        '/api/admin/playlists/$playlistId/items/bulk',
+        data: {'contentIds': contentIds},
+      );
+
+      // Invalidate playlist items
+      ref.invalidate(playlistItemsProvider(playlistId));
+      ref.invalidate(playlistsListProvider);
+
+      state = const AsyncValue.data(null);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
       rethrow;

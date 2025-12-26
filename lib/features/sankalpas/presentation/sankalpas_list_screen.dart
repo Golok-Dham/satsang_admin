@@ -1,29 +1,26 @@
-// ignore_for_file: unused_local_variable, missing_identifier, prefer_typing_uninitialized_variables
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:trina_grid/trina_grid.dart';
 
-import '../../../core/models/api_models.dart';
 import '../../../core/utils/admin_grid_config.dart';
 import '../../../core/utils/role_guard.dart';
 import '../../../core/utils/snackbar_helper.dart';
-import '../providers/quotes_provider.dart';
-import 'quote_form_screen.dart';
+import '../models/sankalp_template_model.dart';
+import '../providers/sankalpas_provider.dart';
+import 'sankalp_form_screen.dart';
 
-class QuotesListScreen extends ConsumerStatefulWidget {
+class SankalpasListScreen extends ConsumerStatefulWidget {
   final bool embedded;
 
-  const QuotesListScreen({super.key, this.embedded = false});
+  const SankalpasListScreen({super.key, this.embedded = false});
 
   @override
-  ConsumerState<QuotesListScreen> createState() => _QuotesListScreenState();
+  ConsumerState<SankalpasListScreen> createState() => _SankalpasListScreenState();
 }
 
-class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
-  String? _selectedCategory;
-  bool? _selectedActiveStatus;
+class _SankalpasListScreenState extends ConsumerState<SankalpasListScreen> {
+  String? _selectedType;
+  bool? _selectedSystemTemplate;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   int _currentPage = 0;
@@ -38,21 +35,23 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     super.dispose();
   }
 
-  /// Convert DivineQuote to TrinaRow
-  TrinaRow _quoteToRow(DivineQuote quote) {
+  /// Convert SankalpTemplate to TrinaRow
+  TrinaRow _templateToRow(SankalpTemplate template) {
     return TrinaRow(
       cells: {
-        'id': TrinaCell(value: quote.id),
-        'textEnglish': TrinaCell(value: quote.textEnglishMeaning),
-        'textDevanagari': TrinaCell(value: quote.textDevanagari),
-        'sourceBook': TrinaCell(value: quote.sourceBook ?? ''),
-        'category': TrinaCell(value: quote.category.toString().split('.').last),
-        'mood': TrinaCell(value: quote.mood.toString().split('.').last),
-        'isActive': TrinaCell(value: quote.isActive),
-        'priority': TrinaCell(value: quote.displayPriority),
-        'favoriteCount': TrinaCell(value: quote.favoriteCount),
-        'shareCount': TrinaCell(value: quote.shareCount),
-        'actions': TrinaCell(value: quote.id), // Store ID for action buttons
+        'id': TrinaCell(value: template.id),
+        'title': TrinaCell(value: template.title),
+        'titleHindi': TrinaCell(value: template.titleHindi ?? ''),
+        'sankalpType': TrinaCell(value: template.sankalpType.displayName),
+        'defaultTarget': TrinaCell(
+          value: template.defaultTargetValue != null
+              ? '${template.defaultTargetValue} ${template.defaultTargetUnit ?? ''}'.trim()
+              : '-',
+        ),
+        'icon': TrinaCell(value: template.icon ?? ''),
+        'displayOrder': TrinaCell(value: template.displayOrder),
+        'isSystemTemplate': TrinaCell(value: template.isSystemTemplate),
+        'actions': TrinaCell(value: template.id),
       },
     );
   }
@@ -65,12 +64,13 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final quotesAsync = ref.watch(
-      quotesListProvider(
+    final theme = Theme.of(context);
+    final templatesAsync = ref.watch(
+      sankalpTemplatesListProvider(
         page: _currentPage,
         size: _pageSize,
-        category: _selectedCategory,
-        isActive: _selectedActiveStatus,
+        sankalpType: _selectedType,
+        isSystemTemplate: _selectedSystemTemplate,
         search: _searchQuery.isEmpty ? null : _searchQuery,
       ),
     );
@@ -88,8 +88,8 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    labelText: 'Search quotes',
-                    hintText: 'Search by text, source book...',
+                    labelText: 'Search templates',
+                    hintText: 'Search by title, description...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -113,61 +113,47 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // Category and Status filters + Export buttons
+                // Type and System filters
                 Row(
                   children: [
-                    // Category filter
+                    // Sankalp type filter
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        initialValue: _selectedCategory,
-                        decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
+                        initialValue: _selectedType,
+                        decoration: const InputDecoration(labelText: 'Sankalp Type', border: OutlineInputBorder()),
                         items: const [
-                          DropdownMenuItem(value: null, child: Text('All')),
-                          DropdownMenuItem(value: 'BHAKTI', child: Text('Bhakti')),
-                          DropdownMenuItem(value: 'GYAAN', child: Text('Gyaan')),
-                          DropdownMenuItem(value: 'VAIRAGYA', child: Text('Vairagya')),
-                          DropdownMenuItem(value: 'KARMA', child: Text('Karma')),
-                          DropdownMenuItem(value: 'GENERAL', child: Text('General')),
+                          DropdownMenuItem(value: null, child: Text('All Types')),
+                          DropdownMenuItem(value: 'TIME_BASED', child: Text('Time Based')),
+                          DropdownMenuItem(value: 'COUNT_BASED', child: Text('Count Based')),
+                          DropdownMenuItem(value: 'BOOLEAN', child: Text('Yes/No')),
+                          DropdownMenuItem(value: 'ROOPDHYAN_SPECIAL', child: Text('Roopdhyan Special')),
                         ],
                         onChanged: (value) {
                           setState(() {
-                            _selectedCategory = value;
+                            _selectedType = value;
                             _currentPage = 0;
                           });
                         },
                       ),
                     ),
                     const SizedBox(width: 16),
-                    // Active status filter
+                    // System template filter
                     Expanded(
                       child: DropdownButtonFormField<bool?>(
-                        initialValue: _selectedActiveStatus,
-                        decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
+                        initialValue: _selectedSystemTemplate,
+                        decoration: const InputDecoration(labelText: 'Template Type', border: OutlineInputBorder()),
                         items: const [
                           DropdownMenuItem(value: null, child: Text('All')),
-                          DropdownMenuItem(value: true, child: Text('Active')),
-                          DropdownMenuItem(value: false, child: Text('Inactive')),
+                          DropdownMenuItem(value: true, child: Text('System Templates')),
+                          DropdownMenuItem(value: false, child: Text('Custom Templates')),
                         ],
                         onChanged: (value) {
                           setState(() {
-                            _selectedActiveStatus = value;
+                            _selectedSystemTemplate = value;
                             _currentPage = 0;
                           });
                         },
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Export buttons
-                    TextButton.icon(
-                      onPressed: _stateManager != null ? () => _exportToCSV() : null,
-                      icon: const Icon(Icons.download),
-                      label: const Text('CSV'),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: _stateManager != null ? () => _exportToPDF() : null,
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text('PDF'),
                     ),
                   ],
                 ),
@@ -175,28 +161,24 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
             ),
           ),
         ),
-        // Quotes list with TrinaGrid
+        // Templates list with TrinaGrid
         Expanded(
-          child: quotesAsync.when(
+          child: templatesAsync.when(
             data: (pagedData) {
-              final quotes = pagedData.content;
-              if (quotes.isEmpty) {
+              final templates = pagedData.content;
+              if (templates.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.format_quote,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                      ),
+                      Icon(Icons.self_improvement, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
-                      Text('No quotes found', style: Theme.of(context).textTheme.titleLarge),
+                      Text('No sankalp templates found', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Text(
-                        'Create your first quote using the + button',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        'Create your first sankalp template using the + button',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -204,8 +186,8 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                 );
               }
 
-              // Convert quotes to rows
-              _rows = quotes.map(_quoteToRow).toList();
+              // Convert templates to rows
+              _rows = templates.map(_templateToRow).toList();
 
               return TrinaGrid(
                 columns: [
@@ -218,92 +200,87 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'English Text',
-                    field: 'textEnglish',
+                    title: 'Title',
+                    field: 'title',
                     type: TrinaColumnType.text(),
-                    width: 350,
+                    width: 200,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'Devanagari Text',
-                    field: 'textDevanagari',
-                    type: TrinaColumnType.text(),
-                    width: 300,
-                    enableEditingMode: false,
-                    renderer: (rendererContext) {
-                      final text = rendererContext.cell.value?.toString() ?? '';
-                      return Text(
-                        text,
-                        style: GoogleFonts.notoSansDevanagari(fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                      );
-                    },
-                  ),
-                  TrinaColumn(
-                    title: 'Source Book',
-                    field: 'sourceBook',
+                    title: 'Title (Hindi)',
+                    field: 'titleHindi',
                     type: TrinaColumnType.text(),
                     width: 180,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'Category',
-                    field: 'category',
+                    title: 'Type',
+                    field: 'sankalpType',
                     type: TrinaColumnType.text(),
-                    width: 120,
+                    width: 140,
                     enableEditingMode: false,
                     renderer: (rendererContext) {
-                      final category = rendererContext.cell.value?.toString() ?? '';
+                      final type = rendererContext.cell.value?.toString() ?? '';
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: _getCategoryColorByName(category),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(category, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                        decoration: BoxDecoration(color: _getTypeColor(type), borderRadius: BorderRadius.circular(12)),
+                        child: Text(type, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                       );
                     },
                   ),
                   TrinaColumn(
-                    title: 'Mood',
-                    field: 'mood',
+                    title: 'Target',
+                    field: 'defaultTarget',
                     type: TrinaColumnType.text(),
                     width: 120,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'Active',
-                    field: 'isActive',
+                    title: 'Icon',
+                    field: 'icon',
+                    type: TrinaColumnType.text(),
+                    width: 100,
+                    enableEditingMode: false,
+                    renderer: (rendererContext) {
+                      final iconName = rendererContext.cell.value?.toString() ?? '';
+                      if (iconName.isEmpty) return const SizedBox();
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(_getIconData(iconName), size: 20),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              iconName,
+                              style: const TextStyle(fontSize: 11),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  TrinaColumn(
+                    title: 'Order',
+                    field: 'displayOrder',
+                    type: TrinaColumnType.number(),
+                    width: 80,
+                    enableEditingMode: false,
+                  ),
+                  TrinaColumn(
+                    title: 'System',
+                    field: 'isSystemTemplate',
                     type: TrinaColumnType.boolean(),
                     width: 100,
                     enableEditingMode: false,
                     renderer: (rendererContext) {
-                      final quoteId = rendererContext.row.cells['id']?.value as int?;
-                      final isActive = rendererContext.cell.value as bool? ?? false;
-                      return Switch(value: isActive, onChanged: quoteId != null ? (_) => _toggleActive(quoteId) : null);
+                      final templateId = rendererContext.row.cells['id']?.value as int?;
+                      final isSystem = rendererContext.cell.value as bool? ?? false;
+                      return Switch(
+                        value: isSystem,
+                        onChanged: templateId != null ? (_) => _toggleSystem(templateId) : null,
+                      );
                     },
-                  ),
-                  TrinaColumn(
-                    title: 'Priority',
-                    field: 'priority',
-                    type: TrinaColumnType.number(),
-                    width: 100,
-                    enableEditingMode: false,
-                  ),
-                  TrinaColumn(
-                    title: 'Favorites',
-                    field: 'favoriteCount',
-                    type: TrinaColumnType.number(),
-                    width: 100,
-                    enableEditingMode: false,
-                  ),
-                  TrinaColumn(
-                    title: 'Shares',
-                    field: 'shareCount',
-                    type: TrinaColumnType.number(),
-                    width: 100,
-                    enableEditingMode: false,
                   ),
                   TrinaColumn(
                     title: 'Actions',
@@ -312,16 +289,16 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                     width: 120,
                     enableEditingMode: false,
                     renderer: (rendererContext) {
-                      final quoteId = rendererContext.cell.value as int?;
-                      if (quoteId == null) return const SizedBox();
-                      final quote = quotes.firstWhere((q) => q.id == quoteId);
+                      final templateId = rendererContext.cell.value as int?;
+                      if (templateId == null) return const SizedBox();
+                      final template = templates.firstWhere((t) => t.id == templateId);
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit, size: 20),
-                            onPressed: () => _editQuote(quote),
+                            onPressed: () => _editTemplate(template),
                             tooltip: 'Edit',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -332,7 +309,7 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                             requiredPermission: Permission.delete,
                             child: IconButton(
                               icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                              onPressed: () => _deleteQuote(quoteId),
+                              onPressed: () => _deleteTemplate(templateId),
                               tooltip: 'Delete',
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -348,26 +325,25 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                   _stateManager = event.stateManager;
                 },
                 onRowDoubleTap: (event) {
-                  final quoteId = event.row.cells['id']?.value as int?;
-                  if (quoteId != null) {
-                    final quote = quotes.firstWhere((q) => q.id == quoteId);
-                    _editQuote(quote);
+                  final templateId = event.row.cells['id']?.value as int?;
+                  if (templateId != null) {
+                    final template = templates.firstWhere((t) => t.id == templateId);
+                    _editTemplate(template);
                   }
                 },
                 configuration: AdminGridConfig.getConfiguration(context),
                 createFooter: (stateManager) {
-                  // Server-side pagination controls
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+                      border: Border(top: BorderSide(color: theme.dividerColor)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Showing ${pagedData.number * pagedData.size + 1}-${pagedData.number * pagedData.size + quotes.length} of ${pagedData.totalElements} quotes',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          'Showing ${pagedData.number * pagedData.size + 1}-${pagedData.number * pagedData.size + templates.length} of ${pagedData.totalElements} templates',
+                          style: theme.textTheme.bodyMedium,
                         ),
                         Row(
                           children: [
@@ -402,7 +378,7 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'Page ${_currentPage + 1} of ${pagedData.totalPages}',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                style: theme.textTheme.bodyMedium,
                               ),
                             ),
                             IconButton(
@@ -432,19 +408,19 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
+                  Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
-                  Text('Error loading quotes', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Error loading templates', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 8),
-                  Text(error.toString(), style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                  Text(error.toString(), style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ref.refresh(
-                      quotesListProvider(
+                      sankalpTemplatesListProvider(
                         page: _currentPage,
                         size: _pageSize,
-                        category: _selectedCategory,
-                        isActive: _selectedActiveStatus,
+                        sankalpType: _selectedType,
+                        isSystemTemplate: _selectedSystemTemplate,
                       ),
                     ),
                     child: const Text('Retry'),
@@ -464,9 +440,9 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: FloatingActionButton.extended(
-              onPressed: _createQuote,
+              onPressed: _createTemplate,
               icon: const Icon(Icons.add),
-              label: const Text('Create Quote'),
+              label: const Text('Create Template'),
             ),
           ),
         ],
@@ -475,19 +451,22 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Divine Quotes Management'),
+        title: const Text('Sankalp Templates Management'),
         actions: [
-          // Move Create Quote button to AppBar
-          TextButton.icon(onPressed: _createQuote, icon: const Icon(Icons.add), label: const Text('Create Quote')),
+          TextButton.icon(
+            onPressed: _createTemplate,
+            icon: const Icon(Icons.add),
+            label: const Text('Create Template'),
+          ),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => ref.refresh(
-              quotesListProvider(
+              sankalpTemplatesListProvider(
                 page: _currentPage,
                 size: _pageSize,
-                category: _selectedCategory,
-                isActive: _selectedActiveStatus,
+                sankalpType: _selectedType,
+                isSystemTemplate: _selectedSystemTemplate,
               ),
             ),
             tooltip: 'Refresh',
@@ -498,87 +477,104 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     );
   }
 
-  Color _getCategoryColorByName(String category) {
-    switch (category) {
-      case 'BHAKTI':
-        return Colors.pink.withValues(alpha: 0.3);
-      case 'GYAAN':
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'Time Based':
         return Colors.blue.withValues(alpha: 0.3);
-      case 'VAIRAGYA':
-        return Colors.orange.withValues(alpha: 0.3);
-      case 'KARMA':
+      case 'Count Based':
         return Colors.green.withValues(alpha: 0.3);
-      case 'GENERAL':
-        return Colors.grey.withValues(alpha: 0.3);
+      case 'Yes/No':
+        return Colors.orange.withValues(alpha: 0.3);
+      case 'Roopdhyan Special':
+        return Colors.purple.withValues(alpha: 0.3);
       default:
         return Colors.grey.withValues(alpha: 0.3);
     }
   }
 
-  Future<void> _exportToCSV() async {
-    if (_stateManager == null) return;
-
-    try {
-      final csvExport = TrinaGridExportCsv();
-      final csvData = await csvExport.export(stateManager: _stateManager!, includeHeaders: true);
-
-      // In a web app, you would use FileSaver or download.js
-      // For now, show success message
-      if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'CSV export ready (${csvData.length} bytes)');
-    } catch (e) {
-      if (!mounted) return;
-      SnackBarHelper.showError(context, 'Export failed: $e');
+  IconData _getIconData(String iconName) {
+    // Map common icon names to IconData
+    switch (iconName) {
+      case 'self_improvement':
+        return Icons.self_improvement;
+      case 'spa':
+        return Icons.spa;
+      case 'favorite':
+        return Icons.favorite;
+      case 'psychology':
+        return Icons.psychology;
+      case 'emoji_objects':
+        return Icons.emoji_objects;
+      case 'local_fire_department':
+        return Icons.local_fire_department;
+      case 'auto_awesome':
+        return Icons.auto_awesome;
+      case 'brightness_7':
+        return Icons.brightness_7;
+      case 'wb_sunny':
+        return Icons.wb_sunny;
+      case 'nights_stay':
+        return Icons.nights_stay;
+      case 'timer':
+        return Icons.timer;
+      case 'schedule':
+        return Icons.schedule;
+      case 'event':
+        return Icons.event;
+      case 'flag':
+        return Icons.flag;
+      case 'star':
+        return Icons.star;
+      case 'favorite_border':
+        return Icons.favorite_border;
+      case 'bookmark':
+        return Icons.bookmark;
+      case 'check_circle':
+        return Icons.check_circle;
+      case 'celebration':
+        return Icons.celebration;
+      case 'music_note':
+        return Icons.music_note;
+      case 'headphones':
+        return Icons.headphones;
+      case 'menu_book':
+        return Icons.menu_book;
+      case 'library_books':
+        return Icons.library_books;
+      case 'edit_note':
+        return Icons.edit_note;
+      case 'draw':
+        return Icons.draw;
+      default:
+        return Icons.circle;
     }
   }
 
-  Future<void> _exportToPDF() async {
-    if (_stateManager == null) return;
+  void _createTemplate() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SankalpFormScreen()));
+  }
 
+  void _editTemplate(SankalpTemplate template) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => SankalpFormScreen(template: template)));
+  }
+
+  Future<void> _toggleSystem(int templateId) async {
     try {
-      final pdfExport = TrinaGridExportPdf();
-      final pdfData = await pdfExport.export(
-        stateManager: _stateManager!,
-        title: 'Divine Quotes Export',
-        creator: 'Satsang Admin',
-        includeHeaders: true,
-      );
-
-      // In a web app, you would use FileSaver or download.js
-      // For now, show success message
+      await ref.read(sankalpTemplateActionsProvider.notifier).toggleSystemTemplate(templateId);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'PDF export ready (${pdfData.length} bytes)');
-    } catch (e) {
-      if (!mounted) return;
-      SnackBarHelper.showError(context, 'Export failed: $e');
-    }
-  }
-
-  void _createQuote() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuoteFormScreen()));
-  }
-
-  void _editQuote(DivineQuote quote) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuoteFormScreen(quote: quote)));
-  }
-
-  Future<void> _toggleActive(int quoteId) async {
-    try {
-      await ref.read(quoteActionsProvider.notifier).toggleActive(quoteId);
-      if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'Quote status updated');
+      SnackBarHelper.showSuccess(context, 'Template status updated');
     } catch (e) {
       if (!mounted) return;
       SnackBarHelper.showError(context, 'Failed to update status: $e');
     }
   }
 
-  Future<void> _deleteQuote(int quoteId) async {
+  Future<void> _deleteTemplate(int templateId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Quote'),
-        content: const Text('Are you sure you want to delete this quote?'),
+        title: const Text('Delete Template'),
+        content: const Text('Are you sure you want to delete this sankalp template?'),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
@@ -589,12 +585,12 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(quoteActionsProvider.notifier).deleteQuote(quoteId);
+      await ref.read(sankalpTemplateActionsProvider.notifier).deleteTemplate(templateId);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'Quote deleted');
+      SnackBarHelper.showSuccess(context, 'Template deleted');
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showError(context, 'Failed to delete quote: $e');
+      SnackBarHelper.showError(context, 'Failed to delete template: $e');
     }
   }
 }

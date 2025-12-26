@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:trina_grid/trina_grid.dart';
 
+import '../../../core/utils/admin_grid_config.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../models/user_model.dart' as model;
 import '../providers/user_provider.dart';
@@ -253,17 +254,7 @@ class _UsersListScreenState extends ConsumerState<UsersListScreen> {
                 onLoaded: (TrinaGridOnLoadedEvent event) {
                   _stateManager = event.stateManager;
                 },
-                configuration: TrinaGridConfiguration(
-                  style: TrinaGridStyleConfig(
-                    gridBorderColor: theme.dividerColor,
-                    activatedBorderColor: theme.colorScheme.primary,
-                    gridBackgroundColor: theme.colorScheme.surface,
-                    rowColor: theme.colorScheme.surface,
-                    oddRowColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                    cellTextStyle: theme.textTheme.bodyMedium!,
-                    columnTextStyle: theme.textTheme.titleSmall!.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
+                configuration: AdminGridConfig.getConfiguration(context),
                 createFooter: (stateManager) {
                   return _buildPagination(paginatedUsers, theme);
                 },

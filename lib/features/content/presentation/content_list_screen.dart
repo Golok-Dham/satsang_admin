@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trina_grid/trina_grid.dart';
 
+import '../../../core/utils/admin_grid_config.dart';
+import '../../../core/utils/role_guard.dart';
 import '../../../core/utils/snackbar_helper.dart';
 import '../models/content_model.dart';
 import '../providers/content_provider.dart';
@@ -371,12 +373,16 @@ class _ContentListScreenState extends ConsumerState<ContentListScreen> {
                             constraints: const BoxConstraints(),
                           ),
                           const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.delete, size: 18, color: Colors.red),
-                            onPressed: () => _deleteContent(contentId),
-                            tooltip: 'Delete',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
+                          // Delete button - ADMIN only
+                          RoleGuard(
+                            requiredPermission: Permission.delete,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete, size: 18, color: Colors.red),
+                              onPressed: () => _deleteContent(contentId),
+                              tooltip: 'Delete',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
                           ),
                         ],
                       );
@@ -394,16 +400,7 @@ class _ContentListScreenState extends ConsumerState<ContentListScreen> {
                     _editContent(content);
                   }
                 },
-                configuration: TrinaGridConfiguration(
-                  style: const TrinaGridStyleConfig(
-                    rowHeight: 50,
-                    columnHeight: 45,
-                    enableCellBorderHorizontal: false,
-                    enableCellBorderVertical: true,
-                  ),
-                  scrollbar: const TrinaGridScrollbarConfig(isAlwaysShown: false, thumbVisible: true),
-                  columnSize: const TrinaGridColumnSizeConfig(autoSizeMode: TrinaAutoSizeMode.none),
-                ),
+                configuration: AdminGridConfig.getConfiguration(context),
                 createFooter: (stateManager) {
                   // Server-side pagination controls
                   return Container(

@@ -1,153 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/providers/auth_provider.dart';
 import '../providers/dashboard_provider.dart';
-import '../../quotes/presentation/quotes_list_screen.dart';
-import '../../content/presentation/content_list_screen.dart';
-import '../../users/presentation/users_list_screen.dart';
-import '../../sankalpas/presentation/sankalpas_list_screen.dart';
-import '../../quizzes/presentation/quizzes_list_screen.dart';
 
-class DashboardScreen extends ConsumerStatefulWidget {
-  const DashboardScreen({super.key});
+/// Dashboard content widget - displays stats and overview
+class DashboardContent extends ConsumerWidget {
+  const DashboardContent({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
-  int _selectedIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Satsang Admin Dashboard'),
-        actions: [
-          IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
-          const SizedBox(width: 8),
-          PopupMenuButton(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  CircleAvatar(child: Text((user?.email ?? 'A')[0].toUpperCase())),
-                  const SizedBox(width: 8),
-                  Text(user?.email ?? 'Admin'),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_drop_down),
-                ],
-              ),
-            ),
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                child: const ListTile(leading: Icon(Icons.logout), title: Text('Sign Out')),
-                onTap: () async {
-                  await ref.read(authServiceProvider.notifier).signOut();
-                },
-              ),
-            ],
-          ),
-        ],
-      ),
-      drawer: NavigationDrawer(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-          Navigator.of(context).pop(); // Close drawer
-          // Navigate using GoRouter for deep linking
-          switch (index) {
-            case 0:
-              context.go('/');
-              break;
-            case 1:
-              context.go('/content');
-              break;
-            case 2:
-              context.go('/categories');
-              break;
-            case 3:
-              context.go('/users');
-              break;
-            case 4:
-              context.go('/playlists');
-              break;
-            case 5:
-              context.go('/sankalpas');
-              break;
-            case 6:
-              context.go('/quizzes');
-              break;
-            case 7:
-              context.go('/quotes');
-              break;
-          }
-        },
-        children: const [
-          DrawerHeader(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.admin_panel_settings, size: 48),
-                SizedBox(height: 8),
-                Text('Satsang Admin', style: TextStyle(fontSize: 18)),
-              ],
-            ),
-          ),
-          NavigationDrawerDestination(icon: Icon(Icons.dashboard), label: Text('Dashboard')),
-          NavigationDrawerDestination(icon: Icon(Icons.video_library), label: Text('Content')),
-          NavigationDrawerDestination(icon: Icon(Icons.category), label: Text('Categories')),
-          NavigationDrawerDestination(icon: Icon(Icons.people), label: Text('Users')),
-          NavigationDrawerDestination(icon: Icon(Icons.playlist_play), label: Text('Playlists')),
-          NavigationDrawerDestination(icon: Icon(Icons.self_improvement), label: Text('Sankalpas')),
-          NavigationDrawerDestination(icon: Icon(Icons.quiz), label: Text('Quizzes')),
-          NavigationDrawerDestination(icon: Icon(Icons.format_quote), label: Text('Quotes')),
-          NavigationDrawerDestination(icon: Icon(Icons.analytics), label: Text('Analytics')),
-        ],
-      ),
-      body: _buildContent(theme),
-    );
-  }
-
-  Widget _buildContent(ThemeData theme) {
-    switch (_selectedIndex) {
-      case 0:
-        return _buildDashboard(theme);
-      case 1:
-        return const ContentListScreen(embedded: true);
-      case 3:
-        return const UsersListScreen(embedded: true);
-      case 5:
-        return const SankalpasListScreen(embedded: true);
-      case 6:
-        return const QuizzesListScreen(embedded: true);
-      case 7:
-        return const QuotesListScreen(embedded: true);
-      default:
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.construction, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
-              const SizedBox(height: 16),
-              Text('Coming Soon', style: theme.textTheme.headlineMedium),
-              const SizedBox(height: 8),
-              Text('This feature is under development', style: theme.textTheme.bodyMedium),
-            ],
-          ),
-        );
-    }
-  }
-
-  Widget _buildDashboard(ThemeData theme) {
     final statsAsync = ref.watch(dashboardStatsProvider);
 
     return Padding(
@@ -158,16 +21,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Welcome back!', style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Here\'s what\'s happening with your platform today.',
-                    style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  ),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Welcome back!', style: theme.textTheme.headlineMedium),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Here\'s what\'s happening with your platform today.',
+                      style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.refresh),

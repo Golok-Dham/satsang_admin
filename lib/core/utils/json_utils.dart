@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Enhanced JSON utilities for type-safe serialization
 class JsonUtils {
   /// Safely cast to String
@@ -7,8 +9,7 @@ class JsonUtils {
   static int? asInt(dynamic value) => value as int?;
 
   /// Safely cast to bool
-  static bool asBool(dynamic value, {bool defaultValue = false}) =>
-      value as bool? ?? defaultValue;
+  static bool asBool(dynamic value, {bool defaultValue = false}) => value as bool? ?? defaultValue;
 
   /// Safely cast to double
   static double? asDouble(dynamic value) => value as double?;
@@ -21,6 +22,20 @@ class JsonUtils {
     return null;
   }
 
+  /// Parse DateTime from dynamic value (alias for asDateTime)
+  static DateTime? parseDateTime(dynamic value) => asDateTime(value);
+
+  /// Parse JSON list from string
+  static List<dynamic> parseJsonList(String jsonString) {
+    try {
+      final decoded = json.decode(jsonString);
+      if (decoded is List) return decoded;
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   /// Safely cast to `List<T>`
   static List<T>? asList<T>(dynamic value, T Function(dynamic) mapper) {
     if (value == null) return null;
@@ -29,19 +44,16 @@ class JsonUtils {
   }
 
   /// Safely cast to `Map<String, dynamic>`
-  static Map<String, dynamic>? asMap(dynamic value) =>
-      value as Map<String, dynamic>?;
+  static Map<String, dynamic>? asMap(dynamic value) => value as Map<String, dynamic>?;
 }
 
 /// Extension methods for cleaner JSON handling
 extension JsonExtensions on Map<String, dynamic> {
   String? getString(String key) => JsonUtils.asString(this[key]);
   int? getInt(String key) => JsonUtils.asInt(this[key]);
-  bool getBool(String key, {bool defaultValue = false}) =>
-      JsonUtils.asBool(this[key], defaultValue: defaultValue);
+  bool getBool(String key, {bool defaultValue = false}) => JsonUtils.asBool(this[key], defaultValue: defaultValue);
   double? getDouble(String key) => JsonUtils.asDouble(this[key]);
   DateTime? getDateTime(String key) => JsonUtils.asDateTime(this[key]);
-  List<T>? getList<T>(String key, T Function(dynamic) mapper) =>
-      JsonUtils.asList(this[key], mapper);
+  List<T>? getList<T>(String key, T Function(dynamic) mapper) => JsonUtils.asList(this[key], mapper);
   Map<String, dynamic>? getMap(String key) => JsonUtils.asMap(this[key]);
 }

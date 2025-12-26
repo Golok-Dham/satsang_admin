@@ -1,33 +1,30 @@
-// ignore_for_file: unused_local_variable, missing_identifier, prefer_typing_uninitialized_variables
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:trina_grid/trina_grid.dart';
 
-import '../../../core/models/api_models.dart';
 import '../../../core/utils/admin_grid_config.dart';
 import '../../../core/utils/role_guard.dart';
 import '../../../core/utils/snackbar_helper.dart';
-import '../providers/quotes_provider.dart';
-import 'quote_form_screen.dart';
+import '../models/quiz_model.dart';
+import '../providers/quizzes_provider.dart';
+import 'quiz_form_screen.dart';
 
-class QuotesListScreen extends ConsumerStatefulWidget {
+class QuizzesListScreen extends ConsumerStatefulWidget {
   final bool embedded;
 
-  const QuotesListScreen({super.key, this.embedded = false});
+  const QuizzesListScreen({super.key, this.embedded = false});
 
   @override
-  ConsumerState<QuotesListScreen> createState() => _QuotesListScreenState();
+  ConsumerState<QuizzesListScreen> createState() => _QuizzesListScreenState();
 }
 
-class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
-  String? _selectedCategory;
-  bool? _selectedActiveStatus;
+class _QuizzesListScreenState extends ConsumerState<QuizzesListScreen> {
+  bool? _selectedActive;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   int _currentPage = 0;
-  int _pageSize = 50;
+  int _pageSize = 20;
   TrinaGridStateManager? _stateManager;
   List<TrinaRow> _rows = [];
 
@@ -38,23 +35,27 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     super.dispose();
   }
 
-  /// Convert DivineQuote to TrinaRow
-  TrinaRow _quoteToRow(DivineQuote quote) {
+  /// Convert QuizListItem to TrinaRow
+  TrinaRow _quizToRow(QuizListItem quiz) {
     return TrinaRow(
       cells: {
-        'id': TrinaCell(value: quote.id),
-        'textEnglish': TrinaCell(value: quote.textEnglishMeaning),
-        'textDevanagari': TrinaCell(value: quote.textDevanagari),
-        'sourceBook': TrinaCell(value: quote.sourceBook ?? ''),
-        'category': TrinaCell(value: quote.category.toString().split('.').last),
-        'mood': TrinaCell(value: quote.mood.toString().split('.').last),
-        'isActive': TrinaCell(value: quote.isActive),
-        'priority': TrinaCell(value: quote.displayPriority),
-        'favoriteCount': TrinaCell(value: quote.favoriteCount),
-        'shareCount': TrinaCell(value: quote.shareCount),
-        'actions': TrinaCell(value: quote.id), // Store ID for action buttons
+        'id': TrinaCell(value: quiz.id),
+        'contentId': TrinaCell(value: quiz.contentId),
+        'contentTitle': TrinaCell(value: quiz.contentTitle ?? 'Content #${quiz.contentId}'),
+        'titleEn': TrinaCell(value: quiz.titleEn ?? '-'),
+        'titleHi': TrinaCell(value: quiz.titleHi ?? '-'),
+        'questionCount': TrinaCell(value: quiz.questionCount),
+        'version': TrinaCell(value: quiz.version),
+        'isActive': TrinaCell(value: quiz.isActive),
+        'createdAt': TrinaCell(value: _formatDateTime(quiz.createdAt)),
+        'actions': TrinaCell(value: quiz.id),
       },
     );
+  }
+
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) return '-';
+    return DateFormat('MMM dd, yyyy HH:mm').format(dateTime);
   }
 
   void _onPageChanged(int newPage) {
@@ -65,12 +66,12 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final quotesAsync = ref.watch(
-      quotesListProvider(
+    final theme = Theme.of(context);
+    final quizzesAsync = ref.watch(
+      quizzesListProvider(
         page: _currentPage,
         size: _pageSize,
-        category: _selectedCategory,
-        isActive: _selectedActiveStatus,
+        isActive: _selectedActive,
         search: _searchQuery.isEmpty ? null : _searchQuery,
       ),
     );
@@ -88,8 +89,8 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    labelText: 'Search quotes',
-                    hintText: 'Search by text, source book...',
+                    labelText: 'Search quizzes',
+                    hintText: 'Search by title...',
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
@@ -113,35 +114,12 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-                // Category and Status filters + Export buttons
+                // Active status filter
                 Row(
                   children: [
-                    // Category filter
-                    Expanded(
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _selectedCategory,
-                        decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
-                        items: const [
-                          DropdownMenuItem(value: null, child: Text('All')),
-                          DropdownMenuItem(value: 'BHAKTI', child: Text('Bhakti')),
-                          DropdownMenuItem(value: 'GYAAN', child: Text('Gyaan')),
-                          DropdownMenuItem(value: 'VAIRAGYA', child: Text('Vairagya')),
-                          DropdownMenuItem(value: 'KARMA', child: Text('Karma')),
-                          DropdownMenuItem(value: 'GENERAL', child: Text('General')),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value;
-                            _currentPage = 0;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Active status filter
                     Expanded(
                       child: DropdownButtonFormField<bool?>(
-                        initialValue: _selectedActiveStatus,
+                        initialValue: _selectedActive,
                         decoration: const InputDecoration(labelText: 'Status', border: OutlineInputBorder()),
                         items: const [
                           DropdownMenuItem(value: null, child: Text('All')),
@@ -150,53 +128,37 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                         ],
                         onChanged: (value) {
                           setState(() {
-                            _selectedActiveStatus = value;
+                            _selectedActive = value;
                             _currentPage = 0;
                           });
                         },
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    // Export buttons
-                    TextButton.icon(
-                      onPressed: _stateManager != null ? () => _exportToCSV() : null,
-                      icon: const Icon(Icons.download),
-                      label: const Text('CSV'),
-                    ),
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: _stateManager != null ? () => _exportToPDF() : null,
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text('PDF'),
-                    ),
+                    const Expanded(flex: 2, child: SizedBox()),
                   ],
                 ),
               ],
             ),
           ),
         ),
-        // Quotes list with TrinaGrid
+        // Quizzes list with TrinaGrid
         Expanded(
-          child: quotesAsync.when(
+          child: quizzesAsync.when(
             data: (pagedData) {
-              final quotes = pagedData.content;
-              if (quotes.isEmpty) {
+              final quizzes = pagedData.content;
+              if (quizzes.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.format_quote,
-                        size: 64,
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
-                      ),
+                      Icon(Icons.quiz, size: 64, color: theme.colorScheme.primary.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
-                      Text('No quotes found', style: Theme.of(context).textTheme.titleLarge),
+                      Text('No quizzes found', style: theme.textTheme.titleLarge),
                       const SizedBox(height: 8),
                       Text(
-                        'Create your first quote using the + button',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        'Create your first quiz using the + button',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -204,8 +166,8 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                 );
               }
 
-              // Convert quotes to rows
-              _rows = quotes.map(_quoteToRow).toList();
+              // Convert quizzes to rows
+              _rows = quizzes.map(_quizToRow).toList();
 
               return TrinaGrid(
                 columns: [
@@ -213,63 +175,64 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                     title: 'ID',
                     field: 'id',
                     type: TrinaColumnType.number(),
-                    width: 80,
+                    width: 70,
                     frozen: TrinaColumnFrozen.start,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'English Text',
-                    field: 'textEnglish',
-                    type: TrinaColumnType.text(),
-                    width: 350,
+                    title: 'Content ID',
+                    field: 'contentId',
+                    type: TrinaColumnType.number(),
+                    width: 90,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'Devanagari Text',
-                    field: 'textDevanagari',
+                    title: 'Content Title',
+                    field: 'contentTitle',
                     type: TrinaColumnType.text(),
-                    width: 300,
+                    width: 250,
                     enableEditingMode: false,
-                    renderer: (rendererContext) {
-                      final text = rendererContext.cell.value?.toString() ?? '';
-                      return Text(
-                        text,
-                        style: GoogleFonts.notoSansDevanagari(fontSize: 14),
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                      );
-                    },
                   ),
                   TrinaColumn(
-                    title: 'Source Book',
-                    field: 'sourceBook',
+                    title: 'Quiz Title (EN)',
+                    field: 'titleEn',
                     type: TrinaColumnType.text(),
                     width: 180,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
-                    title: 'Category',
-                    field: 'category',
+                    title: 'Quiz Title (HI)',
+                    field: 'titleHi',
                     type: TrinaColumnType.text(),
-                    width: 120,
+                    width: 180,
+                    enableEditingMode: false,
+                  ),
+                  TrinaColumn(
+                    title: 'Questions',
+                    field: 'questionCount',
+                    type: TrinaColumnType.number(),
+                    width: 100,
                     enableEditingMode: false,
                     renderer: (rendererContext) {
-                      final category = rendererContext.cell.value?.toString() ?? '';
+                      final count = rendererContext.cell.value as int? ?? 0;
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _getCategoryColorByName(category),
-                          borderRadius: BorderRadius.circular(12),
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: Text(category, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                        child: Text(
+                          '$count',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.onPrimaryContainer),
+                        ),
                       );
                     },
                   ),
                   TrinaColumn(
-                    title: 'Mood',
-                    field: 'mood',
-                    type: TrinaColumnType.text(),
-                    width: 120,
+                    title: 'Version',
+                    field: 'version',
+                    type: TrinaColumnType.number(),
+                    width: 80,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
@@ -279,30 +242,16 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                     width: 100,
                     enableEditingMode: false,
                     renderer: (rendererContext) {
-                      final quoteId = rendererContext.row.cells['id']?.value as int?;
+                      final quizId = rendererContext.row.cells['id']?.value as int?;
                       final isActive = rendererContext.cell.value as bool? ?? false;
-                      return Switch(value: isActive, onChanged: quoteId != null ? (_) => _toggleActive(quoteId) : null);
+                      return Switch(value: isActive, onChanged: quizId != null ? (_) => _toggleActive(quizId) : null);
                     },
                   ),
                   TrinaColumn(
-                    title: 'Priority',
-                    field: 'priority',
-                    type: TrinaColumnType.number(),
-                    width: 100,
-                    enableEditingMode: false,
-                  ),
-                  TrinaColumn(
-                    title: 'Favorites',
-                    field: 'favoriteCount',
-                    type: TrinaColumnType.number(),
-                    width: 100,
-                    enableEditingMode: false,
-                  ),
-                  TrinaColumn(
-                    title: 'Shares',
-                    field: 'shareCount',
-                    type: TrinaColumnType.number(),
-                    width: 100,
+                    title: 'Created',
+                    field: 'createdAt',
+                    type: TrinaColumnType.text(),
+                    width: 160,
                     enableEditingMode: false,
                   ),
                   TrinaColumn(
@@ -311,17 +260,18 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                     type: TrinaColumnType.text(),
                     width: 120,
                     enableEditingMode: false,
+                    frozen: TrinaColumnFrozen.end,
                     renderer: (rendererContext) {
-                      final quoteId = rendererContext.cell.value as int?;
-                      if (quoteId == null) return const SizedBox();
-                      final quote = quotes.firstWhere((q) => q.id == quoteId);
+                      final quizId = rendererContext.cell.value as int?;
+                      if (quizId == null) return const SizedBox();
+                      final quiz = quizzes.firstWhere((q) => q.id == quizId);
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.edit, size: 20),
-                            onPressed: () => _editQuote(quote),
+                            onPressed: () => _editQuiz(quiz),
                             tooltip: 'Edit',
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
@@ -332,7 +282,7 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                             requiredPermission: Permission.delete,
                             child: IconButton(
                               icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                              onPressed: () => _deleteQuote(quoteId),
+                              onPressed: () => _deleteQuiz(quizId),
                               tooltip: 'Delete',
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
@@ -348,26 +298,25 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                   _stateManager = event.stateManager;
                 },
                 onRowDoubleTap: (event) {
-                  final quoteId = event.row.cells['id']?.value as int?;
-                  if (quoteId != null) {
-                    final quote = quotes.firstWhere((q) => q.id == quoteId);
-                    _editQuote(quote);
+                  final quizId = event.row.cells['id']?.value as int?;
+                  if (quizId != null) {
+                    final quiz = quizzes.firstWhere((q) => q.id == quizId);
+                    _editQuiz(quiz);
                   }
                 },
                 configuration: AdminGridConfig.getConfiguration(context),
                 createFooter: (stateManager) {
-                  // Server-side pagination controls
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+                      border: Border(top: BorderSide(color: theme.dividerColor)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Showing ${pagedData.number * pagedData.size + 1}-${pagedData.number * pagedData.size + quotes.length} of ${pagedData.totalElements} quotes',
-                          style: Theme.of(context).textTheme.bodyMedium,
+                          'Showing ${pagedData.number * pagedData.size + 1}-${pagedData.number * pagedData.size + quizzes.length} of ${pagedData.totalElements} quizzes',
+                          style: theme.textTheme.bodyMedium,
                         ),
                         Row(
                           children: [
@@ -402,7 +351,7 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: Text(
                                 'Page ${_currentPage + 1} of ${pagedData.totalPages}',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                style: theme.textTheme.bodyMedium,
                               ),
                             ),
                             IconButton(
@@ -432,20 +381,15 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: Theme.of(context).colorScheme.error),
+                  Icon(Icons.error_outline, size: 64, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
-                  Text('Error loading quotes', style: Theme.of(context).textTheme.titleLarge),
+                  Text('Error loading quizzes', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 8),
-                  Text(error.toString(), style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                  Text(error.toString(), style: theme.textTheme.bodyMedium, textAlign: TextAlign.center),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ref.refresh(
-                      quotesListProvider(
-                        page: _currentPage,
-                        size: _pageSize,
-                        category: _selectedCategory,
-                        isActive: _selectedActiveStatus,
-                      ),
+                      quizzesListProvider(page: _currentPage, size: _pageSize, isActive: _selectedActive),
                     ),
                     child: const Text('Retry'),
                   ),
@@ -464,9 +408,9 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: FloatingActionButton.extended(
-              onPressed: _createQuote,
+              onPressed: _createQuiz,
               icon: const Icon(Icons.add),
-              label: const Text('Create Quote'),
+              label: const Text('Create Quiz'),
             ),
           ),
         ],
@@ -475,21 +419,14 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Divine Quotes Management'),
+        title: const Text('Quiz Management'),
         actions: [
-          // Move Create Quote button to AppBar
-          TextButton.icon(onPressed: _createQuote, icon: const Icon(Icons.add), label: const Text('Create Quote')),
+          TextButton.icon(onPressed: _createQuiz, icon: const Icon(Icons.add), label: const Text('Create Quiz')),
           const SizedBox(width: 8),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.refresh(
-              quotesListProvider(
-                page: _currentPage,
-                size: _pageSize,
-                category: _selectedCategory,
-                isActive: _selectedActiveStatus,
-              ),
-            ),
+            onPressed: () =>
+                ref.refresh(quizzesListProvider(page: _currentPage, size: _pageSize, isActive: _selectedActive)),
             tooltip: 'Refresh',
           ),
         ],
@@ -498,90 +435,40 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     );
   }
 
-  Color _getCategoryColorByName(String category) {
-    switch (category) {
-      case 'BHAKTI':
-        return Colors.pink.withValues(alpha: 0.3);
-      case 'GYAAN':
-        return Colors.blue.withValues(alpha: 0.3);
-      case 'VAIRAGYA':
-        return Colors.orange.withValues(alpha: 0.3);
-      case 'KARMA':
-        return Colors.green.withValues(alpha: 0.3);
-      case 'GENERAL':
-        return Colors.grey.withValues(alpha: 0.3);
-      default:
-        return Colors.grey.withValues(alpha: 0.3);
-    }
+  void _createQuiz() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuizFormScreen()));
   }
 
-  Future<void> _exportToCSV() async {
-    if (_stateManager == null) return;
+  void _editQuiz(QuizListItem quiz) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuizFormScreen(quizId: quiz.id)));
+  }
 
+  Future<void> _toggleActive(int quizId) async {
     try {
-      final csvExport = TrinaGridExportCsv();
-      final csvData = await csvExport.export(stateManager: _stateManager!, includeHeaders: true);
-
-      // In a web app, you would use FileSaver or download.js
-      // For now, show success message
+      await ref.read(quizActionsProvider.notifier).toggleActive(quizId);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'CSV export ready (${csvData.length} bytes)');
-    } catch (e) {
-      if (!mounted) return;
-      SnackBarHelper.showError(context, 'Export failed: $e');
-    }
-  }
-
-  Future<void> _exportToPDF() async {
-    if (_stateManager == null) return;
-
-    try {
-      final pdfExport = TrinaGridExportPdf();
-      final pdfData = await pdfExport.export(
-        stateManager: _stateManager!,
-        title: 'Divine Quotes Export',
-        creator: 'Satsang Admin',
-        includeHeaders: true,
-      );
-
-      // In a web app, you would use FileSaver or download.js
-      // For now, show success message
-      if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'PDF export ready (${pdfData.length} bytes)');
-    } catch (e) {
-      if (!mounted) return;
-      SnackBarHelper.showError(context, 'Export failed: $e');
-    }
-  }
-
-  void _createQuote() {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QuoteFormScreen()));
-  }
-
-  void _editQuote(DivineQuote quote) {
-    Navigator.of(context).push(MaterialPageRoute(builder: (_) => QuoteFormScreen(quote: quote)));
-  }
-
-  Future<void> _toggleActive(int quoteId) async {
-    try {
-      await ref.read(quoteActionsProvider.notifier).toggleActive(quoteId);
-      if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'Quote status updated');
+      SnackBarHelper.showSuccess(context, 'Quiz status updated');
     } catch (e) {
       if (!mounted) return;
       SnackBarHelper.showError(context, 'Failed to update status: $e');
     }
   }
 
-  Future<void> _deleteQuote(int quoteId) async {
+  Future<void> _deleteQuiz(int quizId) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Quote'),
-        content: const Text('Are you sure you want to delete this quote?'),
+        title: const Text('Delete Quiz'),
+        content: const Text(
+          'Are you sure you want to delete this quiz? This will also delete all associated questions and user responses.',
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Delete')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
         ],
       ),
     );
@@ -589,12 +476,12 @@ class _QuotesListScreenState extends ConsumerState<QuotesListScreen> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(quoteActionsProvider.notifier).deleteQuote(quoteId);
+      await ref.read(quizActionsProvider.notifier).deleteQuiz(quizId);
       if (!mounted) return;
-      SnackBarHelper.showSuccess(context, 'Quote deleted');
+      SnackBarHelper.showSuccess(context, 'Quiz deleted');
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showError(context, 'Failed to delete quote: $e');
+      SnackBarHelper.showError(context, 'Failed to delete quiz: $e');
     }
   }
 }
